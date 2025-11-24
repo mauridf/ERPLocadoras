@@ -52,6 +52,14 @@ namespace ERPLocadoras.Core.Entities
             AtualizarDataModificacao();
         }
 
+        public void AtualizarNomeCompleto(string nomeCompleto)
+        {
+            if (!string.IsNullOrWhiteSpace(nomeCompleto))
+                NomeCompleto = nomeCompleto;
+
+            AtualizarDataModificacao();
+        }
+
         public void AtualizarEndereco(
             string? cep,
             string? logradouro,

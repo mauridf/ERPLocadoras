@@ -1,6 +1,7 @@
 ﻿using ERPLocadoras.Core.Entities;
 using ERPLocadoras.Core.Enums;
 using ERPLocadoras.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ERPLocadoras.Infra.Data.Seed
 {
@@ -19,7 +20,72 @@ namespace ERPLocadoras.Infra.Data.Seed
         {
             await SeedUsuariosGlobais();
             await SeedLocadorasExemplo();
+            await SeedUsuariosLocadoras();
             await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedUsuariosLocadoras()
+        {
+            var locadoras = await _context.Locadoras.ToListAsync();
+
+            foreach (var locadora in locadoras)
+            {
+                // Criar usuário Admin para cada locadora
+                var emailAdmin = $"admin@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
+
+                var adminExiste = await _context.Usuarios.AnyAsync(u => u.Email == emailAdmin);
+
+                if (!adminExiste)
+                {
+                    var senhaHash = _senhaHasher.HashSenha("Admin123!");
+                    var usuarioAdmin = new Usuario(
+                        email: emailAdmin,
+                        senhaHash: senhaHash,
+                        tipo: Core.Enums.UsuarioTipo.Admin,
+                        ativo: true,
+                        locadoraId: locadora.Id
+                    );
+
+                    _context.Usuarios.Add(usuarioAdmin);
+
+                    // Criar dados pessoais do admin
+                    var pessoaAdmin = new Pessoa($"Administrador {locadora.NomeFantasia}", usuarioAdmin.Id);
+                    pessoaAdmin.AtualizarDadosPessoais(
+                        nomeSocial: null,
+                        sexo: "Masculino",
+                        telefone: "+5511999999999",
+                        dataNascimento: new DateTime(1985, 1, 1),
+                        fotoUrl: null
+                    );
+
+                    _context.Pessoas.Add(pessoaAdmin);
+
+                    // Criar usuário Atendente para cada locadora
+                    var emailAtendente = $"atendente@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
+
+                    var usuarioAtendente = new Usuario(
+                        email: emailAtendente,
+                        senhaHash: senhaHash,
+                        tipo: Core.Enums.UsuarioTipo.Atendente,
+                        ativo: true,
+                        locadoraId: locadora.Id
+                    );
+
+                    _context.Usuarios.Add(usuarioAtendente);
+
+                    // Criar dados pessoais do atendente
+                    var pessoaAtendente = new Pessoa($"Atendente {locadora.NomeFantasia}", usuarioAtendente.Id);
+                    pessoaAtendente.AtualizarDadosPessoais(
+                        nomeSocial: null,
+                        sexo: "Feminino",
+                        telefone: "+5511888888888",
+                        dataNascimento: new DateTime(1990, 5, 15),
+                        fotoUrl: null
+                    );
+
+                    _context.Pessoas.Add(pessoaAtendente);
+                }
+            }
         }
 
         private async Task SeedLocadorasExemplo()
