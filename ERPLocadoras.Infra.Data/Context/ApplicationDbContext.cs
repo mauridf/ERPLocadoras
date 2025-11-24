@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ERPLocadoras.Core.Entities;
+using ERPLocadoras.Infra.Data.Configurations;
 
 namespace ERPLocadoras.Infra.Data
 {
@@ -9,7 +10,6 @@ namespace ERPLocadoras.Infra.Data
         {
         }
 
-        // DbSets serão adicionados nos próximos passos
         public DbSet<Locadora> Locadoras { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
 
@@ -17,7 +17,9 @@ namespace ERPLocadoras.Infra.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configurações das entidades serão adicionadas nos próximos passos
+            // Applying configurations
+            modelBuilder.ApplyConfiguration(new LocadoraConfiguration());
+            modelBuilder.ApplyConfiguration(new UsuarioConfiguration());
         }
     }
 }
