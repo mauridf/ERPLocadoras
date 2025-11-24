@@ -22,8 +22,4 @@
     <ProjectReference Include="..\ERPLocadoras.Infra.Data\ERPLocadoras.Infra.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
