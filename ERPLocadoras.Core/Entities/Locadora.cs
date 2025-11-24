@@ -51,10 +51,10 @@ namespace ERPLocadoras.Core.Entities
 
         // Constructor
         public Locadora(
-        string razaoSocial,
-        string nomeFantasia,
-        string cnpj,
-        StatusLocadora status)
+            string razaoSocial,
+            string nomeFantasia,
+            string cnpj,
+            StatusLocadora status)
         {
             RazaoSocial = razaoSocial;
             NomeFantasia = nomeFantasia;
@@ -73,7 +73,20 @@ namespace ERPLocadoras.Core.Entities
             Locacoes = new List<Locacao>();
         }
 
-        // Methods
+
+        // ==== MÉTODO NOVO ====
+        public void AtualizarDadosBasicos(string? razaoSocial, string? nomeFantasia)
+        {
+            if (!string.IsNullOrWhiteSpace(razaoSocial))
+                RazaoSocial = razaoSocial;
+
+            if (!string.IsNullOrWhiteSpace(nomeFantasia))
+                NomeFantasia = nomeFantasia;
+
+            AtualizarDataModificacao();
+        }
+
+
         public void AtualizarDadosGerais(
             string? inscricaoEstadual,
             string? inscricaoMunicipal,

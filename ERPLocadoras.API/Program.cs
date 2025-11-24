@@ -29,6 +29,7 @@ builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILocadoraService, LocadoraService>();
 builder.Services.AddScoped<DataSeeder>();
 
 // JWT Authentication
@@ -86,6 +87,7 @@ app.UseHttpsRedirection();
 
 // Custom JWT Middleware
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TenantMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
