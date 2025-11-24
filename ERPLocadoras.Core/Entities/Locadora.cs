@@ -51,16 +51,23 @@ namespace ERPLocadoras.Core.Entities
 
         // Constructor
         public Locadora(
-            string razaoSocial,
-            string nomeFantasia,
-            string cnpj,
-            StatusLocadora status)
+        string razaoSocial,
+        string nomeFantasia,
+        string cnpj,
+        StatusLocadora status)
         {
             RazaoSocial = razaoSocial;
             NomeFantasia = nomeFantasia;
             CNPJ = cnpj;
             Status = status;
 
+            Usuarios = new List<Usuario>();
+            Veiculos = new List<Veiculo>();
+            Locacoes = new List<Locacao>();
+        }
+
+        private Locadora()
+        {
             Usuarios = new List<Usuario>();
             Veiculos = new List<Veiculo>();
             Locacoes = new List<Locacao>();

@@ -43,7 +43,7 @@ namespace ERPLocadoras.Application.Services
                 token: token,
                 dataExpiracao: dataExpiracao,
                 email: usuario.Email,
-                nome: usuario.Pessoa?.Nome ?? usuario.Email,
+                nome: usuario.Pessoa?.NomeCompleto ?? usuario.Email,
                 tipoUsuario: usuario.Tipo.ToString(),
                 locadoraId: usuario.LocadoraId,
                 locadoraNome: usuario.Locadora?.NomeFantasia ?? "");

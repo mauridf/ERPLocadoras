@@ -5,6 +5,7 @@ using ERPLocadoras.Application.Interfaces;
 using ERPLocadoras.Application.Services;
 using ERPLocadoras.Core.Models;
 using ERPLocadoras.API.Middleware;
+using ERPLocadoras.Infra.Data.Seed;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +29,7 @@ builder.Services.Configure<JwtConfig>(builder.Configuration.GetSection("Jwt"));
 builder.Services.AddScoped<ISenhaHasher, SenhaHasher>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<DataSeeder>();
 
 // JWT Authentication
 var jwtConfig = builder.Configuration.GetSection("Jwt").Get<JwtConfig>();
@@ -48,6 +50,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var senhaHasher = services.GetRequiredService<ISenhaHasher>();
+
+        // Aplicar migrations pendentes
+        context.Database.Migrate();
+
+        // Executar seed
+        var seeder = new DataSeeder(context, senhaHasher);
+        await seeder.SeedAsync();
+
+        Console.WriteLine("Database seeded successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
