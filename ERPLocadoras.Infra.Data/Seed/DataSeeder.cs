@@ -25,7 +25,105 @@ namespace ERPLocadoras.Infra.Data.Seed
             await SeedUsuariosLocadoras();
             await SeedClientesExemplo();
             await SeedVeiculosExemplo();
+            await SeedLocacoesExemplo();
             await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedLocacoesExemplo()
+        {
+            if (!_context.Locacoes.Any())
+            {
+                var locadoraSpeed = await _context.Locadoras.FirstAsync(l => l.NomeFantasia.Contains("Speed"));
+                var locadoraMoto = await _context.Locadoras.FirstAsync(l => l.NomeFantasia.Contains("Moto Express"));
+
+                var clienteJoao = await _context.Clientes.FirstAsync(c => c.NomeCompleto.Contains("João"));
+                var clienteMaria = await _context.Clientes.FirstAsync(c => c.NomeCompleto.Contains("Maria"));
+                var clientePedro = await _context.Clientes.FirstAsync(c => c.NomeCompleto.Contains("Pedro"));
+
+                var veiculoCivic = await _context.Veiculos.FirstAsync(v => v.Placa == "ABC1D23");
+                var veiculoCorolla = await _context.Veiculos.FirstAsync(v => v.Placa == "DEF2G34");
+                var veiculoCG160 = await _context.Veiculos.FirstAsync(v => v.Placa == "MNO5P67");
+
+                // Locação 1 - Finalizada
+                var locacao1 = new Locacao(
+                    new DateTime(2024, 1, 10),
+                    new DateTime(2024, 1, 15),
+                    TipoLocacao.Diaria,
+                    150.00m,
+                    FormaCobranca.CartaoCredito,
+                    FormaCaucao.CartaoCredito,
+                    750.00m,
+                    15000,
+                    locadoraSpeed.Id,
+                    veiculoCivic.Id,
+                    clienteJoao.Id
+                );
+
+                locacao1.AtualizarPlanoLocacao("Plano Básico", 1.50m, 100);
+                locacao1.AtualizarCaucao(500.00m, FormaCaucao.CartaoCredito);
+                locacao1.AtualizarChecklistEntrega(
+                    "{\"pneus\":\"bom\", \"lataria\":\"boa\", \"documentos\":\"ok\"}",
+                    "3/4",
+                    "Carlos Silva"
+                );
+                locacao1.IniciarLocacao();
+                locacao1.AtualizarChecklistDevolucao(
+                    "{\"pneus\":\"bom\", \"lataria\":\"boa\", \"documentos\":\"ok\"}",
+                    "1/2",
+                    "Carlos Silva"
+                );
+                locacao1.FinalizarLocacao(
+                    new DateTime(2024, 1, 15),
+                    15200,
+                    750.00m,
+                    0
+                );
+
+                // Locação 2 - Ativa
+                var locacao2 = new Locacao(
+                    DateTime.UtcNow.AddDays(-2),
+                    DateTime.UtcNow.AddDays(3),
+                    TipoLocacao.Diaria,
+                    180.00m,
+                    FormaCobranca.Pix,
+                    FormaCaucao.Transferencia,
+                    900.00m,
+                    8000,
+                    locadoraSpeed.Id,
+                    veiculoCorolla.Id,
+                    clienteMaria.Id
+                );
+
+                locacao2.AtualizarPlanoLocacao("Plano Premium", 2.00m, 200);
+                locacao2.AtualizarCaucao(600.00m, FormaCaucao.Transferencia);
+                locacao2.AtualizarChecklistEntrega(
+                    "{\"pneus\":\"excelente\", \"lataria\":\"excelente\", \"documentos\":\"ok\"}",
+                    "cheio",
+                    "Ana Oliveira"
+                );
+                locacao2.IniciarLocacao();
+
+                // Locação 3 - Reservada
+                var locacao3 = new Locacao(
+                    DateTime.UtcNow.AddDays(5),
+                    DateTime.UtcNow.AddDays(10),
+                    TipoLocacao.Semanal,
+                    80.00m,
+                    FormaCobranca.CartaoCredito,
+                    FormaCaucao.CartaoCredito,
+                    400.00m,
+                    5000,
+                    locadoraMoto.Id,
+                    veiculoCG160.Id,
+                    clientePedro.Id
+                );
+
+                locacao3.AtualizarPlanoLocacao("Plano Moto", 0.50m, 50);
+                locacao3.AtualizarCaucao(200.00m, FormaCaucao.CartaoCredito);
+                locacao3.AtualizarObservacoes("Cliente preferiu retirar na sexta-feira", null);
+
+                await _context.Locacoes.AddRangeAsync(locacao1, locacao2, locacao3);
+            }
         }
 
         private async Task SeedVeiculosExemplo()
