@@ -16,6 +16,7 @@ namespace ERPLocadoras.Infra.Data
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Veiculo> Veiculos { get; set; }
         public DbSet<Locacao> Locacoes { get; set; }
+        public DbSet<Manutencao> Manutencoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,7 @@ namespace ERPLocadoras.Infra.Data
             modelBuilder.ApplyConfiguration(new ClienteConfiguration());
             modelBuilder.ApplyConfiguration(new VeiculoConfiguration());
             modelBuilder.ApplyConfiguration(new LocacaoConfiguration());
+            modelBuilder.ApplyConfiguration(new ManutencaoConfiguration());
         }
     }
 }

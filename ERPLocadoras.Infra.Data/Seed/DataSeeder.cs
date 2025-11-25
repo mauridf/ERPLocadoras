@@ -26,7 +26,109 @@ namespace ERPLocadoras.Infra.Data.Seed
             await SeedClientesExemplo();
             await SeedVeiculosExemplo();
             await SeedLocacoesExemplo();
+            await SeedManutencoesExemplo();
             await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedManutencoesExemplo()
+        {
+            if (!_context.Manutencoes.Any())
+            {
+                var locadoraSpeed = await _context.Locadoras.FirstAsync(l => l.NomeFantasia.Contains("Speed"));
+                var locadoraMoto = await _context.Locadoras.FirstAsync(l => l.NomeFantasia.Contains("Moto Express"));
+
+                var veiculoCivic = await _context.Veiculos.FirstAsync(v => v.Placa == "ABC1D23");
+                var veiculoStrada = await _context.Veiculos.FirstAsync(v => v.Placa == "GHI3J45");
+                var veiculoCG160 = await _context.Veiculos.FirstAsync(v => v.Placa == "MNO5P67");
+
+                var mecanicoSpeed = await _context.Usuarios
+                    .Include(u => u.Pessoa)
+                    .FirstAsync(u => u.Email.Contains("admin@speedlocadora"));
+
+                // Manutenção 1 - Preventiva Concluída
+                var manutencao1 = new Manutencao(
+                    TipoManutencao.Preventiva,
+                    "Revisão periódica de 15.000 km - Troca de óleo, filtros e verificação geral",
+                    new DateTime(2024, 1, 5),
+                    15000,
+                    veiculoCivic.Id,
+                    locadoraSpeed.Id
+                );
+
+                manutencao1.AtualizarDatas(
+                    new DateTime(2024, 1, 7),
+                    new DateTime(2024, 1, 6),
+                    15000
+                );
+
+                manutencao1.AtualizarResponsavel(mecanicoSpeed.Id);
+                manutencao1.AtualizarCustos(350.00m, 150.00m, 500.00m);
+                manutencao1.AtualizarGarantiaProximaRevisao("90 dias ou 5.000 km", new DateTime(2024, 4, 6));
+                manutencao1.AtualizarObservacoesAnexos(
+                    "Veículo em bom estado. Realizada troca de óleo sintético, filtro de óleo e filtro de ar.",
+                    "{\"notaFiscal\": \"nf_12345.pdf\", \"fotos\": [\"foto1.jpg\", \"foto2.jpg\"]}"
+                );
+                manutencao1.FinalizarManutencao(
+                    new DateTime(2024, 1, 6),
+                    15000,
+                    500.00m
+                );
+
+                // Manutenção 2 - Corretiva em Andamento
+                var manutencao2 = new Manutencao(
+                    TipoManutencao.Corretiva,
+                    "Reparo no sistema de freios - Pastilhas desgastadas e discos empenados",
+                    DateTime.UtcNow.AddDays(-2),
+                    25200,
+                    veiculoStrada.Id,
+                    locadoraSpeed.Id
+                );
+
+                manutencao2.AtualizarDatas(
+                    DateTime.UtcNow.AddDays(3),
+                    null,
+                    null
+                );
+
+                manutencao2.AtualizarOficina("Auto Center São Paulo", "12.345.678/0001-90");
+                manutencao2.AtualizarCustos(480.00m, 200.00m, 680.00m);
+                manutencao2.AtualizarObservacoesAnexos(
+                    "Cliente relatou barulho na freagem. Diagnóstico: pastilhas desgastadas e discos empenados.",
+                    null
+                );
+                manutencao2.AlterarStatus(StatusManutencao.EmAndamento);
+
+                // Manutenção 3 - Sinistro
+                var manutencao3 = new Manutencao(
+                    TipoManutencao.Sinistro,
+                    "Reparo na lataria devido a colisão lateral - Porta direita e para-lama",
+                    new DateTime(2024, 1, 20),
+                    8000,
+                    veiculoCG160.Id,
+                    locadoraMoto.Id
+                );
+
+                manutencao3.AtualizarDatas(
+                    new DateTime(2024, 1, 25),
+                    new DateTime(2024, 1, 24),
+                    8000
+                );
+
+                manutencao3.AtualizarOficina("Moto Center Express", "98.765.432/0001-10");
+                manutencao3.AtualizarCustos(1200.00m, 300.00m, 1500.00m);
+                manutencao3.AtualizarGarantiaProximaRevisao("60 dias", null);
+                manutencao3.AtualizarObservacoesAnexos(
+                    "Sinistro coberto pelo seguro. Cliente não identificou terceiro responsável.",
+                    "{\"laudoSinistro\": \"laudo_78910.pdf\", \"fotosDanos\": [\"danos1.jpg\", \"danos2.jpg\"]}"
+                );
+                manutencao3.FinalizarManutencao(
+                    new DateTime(2024, 1, 24),
+                    8000,
+                    1500.00m
+                );
+
+                await _context.Manutencoes.AddRangeAsync(manutencao1, manutencao2, manutencao3);
+            }
         }
 
         private async Task SeedLocacoesExemplo()

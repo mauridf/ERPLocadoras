@@ -34,6 +34,8 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<ILocacaoService, LocacaoService>();
+builder.Services.AddScoped<IManutencaoService, ManutencaoService>(); ;
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<DataSeeder>();
 
 // JWT Authentication
