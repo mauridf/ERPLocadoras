@@ -35,6 +35,12 @@
         }
 
         // Methods
+        public void AtualizarNome(string nomeCompleto)
+        {
+            NomeCompleto = nomeCompleto;
+            AtualizarDataModificacao();
+        }
+
         public void AtualizarDadosPessoais(
             string? nomeSocial,
             string? sexo,

@@ -1,7 +1,7 @@
-﻿using ERPLocadoras.Core.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using ERPLocadoras.Core.Entities;
 using ERPLocadoras.Core.Enums;
 using ERPLocadoras.Core.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace ERPLocadoras.Infra.Data.Seed
 {
@@ -10,7 +10,9 @@ namespace ERPLocadoras.Infra.Data.Seed
         private readonly ApplicationDbContext _context;
         private readonly ISenhaHasher _senhaHasher;
 
-        public DataSeeder(ApplicationDbContext context, ISenhaHasher senhaHasher)
+        public DataSeeder(
+            ApplicationDbContext context,
+            ISenhaHasher senhaHasher)
         {
             _context = context;
             _senhaHasher = senhaHasher;
@@ -21,70 +23,37 @@ namespace ERPLocadoras.Infra.Data.Seed
             await SeedUsuariosGlobais();
             await SeedLocadorasExemplo();
             await SeedUsuariosLocadoras();
+            await SeedClientesExemplo();
             await _context.SaveChangesAsync();
         }
 
-        private async Task SeedUsuariosLocadoras()
+        private async Task SeedUsuariosGlobais()
         {
-            var locadoras = await _context.Locadoras.ToListAsync();
-
-            foreach (var locadora in locadoras)
+            // Verificar se já existe algum usuário global
+            if (!_context.Usuarios.Any(u => u.Tipo == UsuarioTipo.Global))
             {
-                // Criar usuário Admin para cada locadora
-                var emailAdmin = $"admin@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
+                var senhaHash = _senhaHasher.HashSenha("Admin123!");
 
-                var adminExiste = await _context.Usuarios.AnyAsync(u => u.Email == emailAdmin);
+                var usuarioGlobal = new Usuario(
+                    email: "admin@erplocadoras.com",
+                    senhaHash: senhaHash,
+                    tipo: UsuarioTipo.Global,
+                    ativo: true
+                );
 
-                if (!adminExiste)
-                {
-                    var senhaHash = _senhaHasher.HashSenha("Admin123!");
-                    var usuarioAdmin = new Usuario(
-                        email: emailAdmin,
-                        senhaHash: senhaHash,
-                        tipo: Core.Enums.UsuarioTipo.Admin,
-                        ativo: true,
-                        locadoraId: locadora.Id
-                    );
+                await _context.Usuarios.AddAsync(usuarioGlobal);
 
-                    _context.Usuarios.Add(usuarioAdmin);
+                // Criar dados pessoais para o admin global
+                var pessoaAdmin = new Pessoa("Administrador Global", usuarioGlobal.Id);
+                pessoaAdmin.AtualizarDadosPessoais(
+                    nomeSocial: null,
+                    sexo: "Masculino",
+                    telefone: "+5511999999999",
+                    dataNascimento: new DateTime(1980, 1, 1),
+                    fotoUrl: null
+                );
 
-                    // Criar dados pessoais do admin
-                    var pessoaAdmin = new Pessoa($"Administrador {locadora.NomeFantasia}", usuarioAdmin.Id);
-                    pessoaAdmin.AtualizarDadosPessoais(
-                        nomeSocial: null,
-                        sexo: "Masculino",
-                        telefone: "+5511999999999",
-                        dataNascimento: new DateTime(1985, 1, 1),
-                        fotoUrl: null
-                    );
-
-                    _context.Pessoas.Add(pessoaAdmin);
-
-                    // Criar usuário Atendente para cada locadora
-                    var emailAtendente = $"atendente@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
-
-                    var usuarioAtendente = new Usuario(
-                        email: emailAtendente,
-                        senhaHash: senhaHash,
-                        tipo: Core.Enums.UsuarioTipo.Atendente,
-                        ativo: true,
-                        locadoraId: locadora.Id
-                    );
-
-                    _context.Usuarios.Add(usuarioAtendente);
-
-                    // Criar dados pessoais do atendente
-                    var pessoaAtendente = new Pessoa($"Atendente {locadora.NomeFantasia}", usuarioAtendente.Id);
-                    pessoaAtendente.AtualizarDadosPessoais(
-                        nomeSocial: null,
-                        sexo: "Feminino",
-                        telefone: "+5511888888888",
-                        dataNascimento: new DateTime(1990, 5, 15),
-                        fotoUrl: null
-                    );
-
-                    _context.Pessoas.Add(pessoaAtendente);
-                }
+                await _context.Pessoas.AddAsync(pessoaAdmin);
             }
         }
 
@@ -97,7 +66,7 @@ namespace ERPLocadoras.Infra.Data.Seed
                     "Locadora de Veículos Speed Ltda",
                     "Speed Locadora",
                     "12345678000195",
-                    Core.Enums.StatusLocadora.Ativa
+                    StatusLocadora.Ativa
                 );
 
                 locadora1.AtualizarDadosGerais(
@@ -145,7 +114,7 @@ namespace ERPLocadoras.Infra.Data.Seed
                     "Moto Loc Express Eireli",
                     "Moto Express",
                     "98765432000110",
-                    Core.Enums.StatusLocadora.Ativa
+                    StatusLocadora.Ativa
                 );
 
                 locadora2.AtualizarDadosGerais(
@@ -192,34 +161,158 @@ namespace ERPLocadoras.Infra.Data.Seed
             }
         }
 
-        private async Task SeedUsuariosGlobais()
+        private async Task SeedUsuariosLocadoras()
         {
-            // Verificar se já existe algum usuário global
-            if (!_context.Usuarios.Any(u => u.Tipo == UsuarioTipo.Global))
+            var locadoras = await _context.Locadoras.ToListAsync();
+
+            foreach (var locadora in locadoras)
             {
-                var senhaHash = _senhaHasher.HashSenha("Admin123!");
+                // Criar usuário Admin para cada locadora
+                var emailAdmin = $"admin@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
 
-                var usuarioGlobal = new Usuario(
-                    email: "admin@erplocadoras.com",
-                    senhaHash: senhaHash,
-                    tipo: UsuarioTipo.Global,
-                    ativo: true
-                );
+                if (!await _context.Usuarios.AnyAsync(u => u.Email == emailAdmin))
+                {
+                    var senhaHash = _senhaHasher.HashSenha("Admin123!");
+                    var usuarioAdmin = new Usuario(
+                        email: emailAdmin,
+                        senhaHash: senhaHash,
+                        tipo: UsuarioTipo.Admin,
+                        ativo: true,
+                        locadoraId: locadora.Id
+                    );
 
-                await _context.Usuarios.AddAsync(usuarioGlobal);
+                    _context.Usuarios.Add(usuarioAdmin);
 
-                // Criar dados pessoais para o admin global
-                var pessoaAdmin = new Pessoa("Administrador Global", usuarioGlobal.Id);
-                pessoaAdmin.AtualizarDadosPessoais(
+                    // Criar dados pessoais do admin
+                    var pessoaAdmin = new Pessoa($"Administrador {locadora.NomeFantasia}", usuarioAdmin.Id);
+                    pessoaAdmin.AtualizarDadosPessoais(
+                        nomeSocial: null,
+                        sexo: "Masculino",
+                        telefone: "+5511999999999",
+                        dataNascimento: new DateTime(1985, 1, 1),
+                        fotoUrl: null
+                    );
+
+                    _context.Pessoas.Add(pessoaAdmin);
+
+                    // Criar usuário Atendente para cada locadora
+                    var emailAtendente = $"atendente@{locadora.NomeFantasia.ToLower().Replace(" ", "")}.com.br";
+
+                    var usuarioAtendente = new Usuario(
+                        email: emailAtendente,
+                        senhaHash: senhaHash,
+                        tipo: UsuarioTipo.Atendente,
+                        ativo: true,
+                        locadoraId: locadora.Id
+                    );
+
+                    _context.Usuarios.Add(usuarioAtendente);
+
+                    // Criar dados pessoais do atendente
+                    var pessoaAtendente = new Pessoa($"Atendente {locadora.NomeFantasia}", usuarioAtendente.Id);
+                    pessoaAtendente.AtualizarDadosPessoais(
+                        nomeSocial: null,
+                        sexo: "Feminino",
+                        telefone: "+5511888888888",
+                        dataNascimento: new DateTime(1990, 5, 15),
+                        fotoUrl: null
+                    );
+
+                    _context.Pessoas.Add(pessoaAtendente);
+                }
+            }
+        }
+
+        private async Task SeedClientesExemplo()
+        {
+            if (!_context.Clientes.Any())
+            {
+                // Cliente 1 - Com acesso ao sistema
+                var cliente1 = new Cliente("João Carlos Silva");
+                cliente1.AtualizarDadosPessoais(
                     nomeSocial: null,
                     sexo: "Masculino",
-                    telefone: "+5511999999999",
-                    dataNascimento: new DateTime(1980, 1, 1),
+                    telefone: "11999991111",
+                    fotoUrl: null
+                );
+                cliente1.AtualizarEndereco(
+                    cep: "01311000",
+                    logradouro: "Rua Augusta",
+                    numero: "1500",
+                    complemento: "Apto 101",
+                    bairro: "Consolação",
+                    cidade: "São Paulo",
+                    uf: "SP",
+                    pais: "Brasil"
+                );
+
+                // Criar usuário para o cliente
+                var usuarioCliente1 = await CriarUsuarioClienteAsync(
+                    "joao.silva@email.com",
+                    "Cliente123!"
+                );
+
+                if (usuarioCliente1 != null)
+                {
+                    cliente1.VincularUsuario(usuarioCliente1.Id);
+                }
+
+                // Cliente 2 - Sem acesso ao sistema (cadastrado por atendente)
+                var cliente2 = new Cliente("Maria Oliveira Santos");
+                cliente2.AtualizarDadosPessoais(
+                    nomeSocial: null,
+                    sexo: "Feminino",
+                    telefone: "11988882222",
+                    fotoUrl: null
+                );
+                cliente2.AtualizarEndereco(
+                    cep: "01415000",
+                    logradouro: "Alameda Santos",
+                    numero: "2100",
+                    complemento: "Sala 305",
+                    bairro: "Jardim Paulista",
+                    cidade: "São Paulo",
+                    uf: "SP",
+                    pais: "Brasil"
+                );
+
+                // Cliente 3 - Com acesso ao sistema
+                var cliente3 = new Cliente("Pedro Henrique Lima");
+                cliente3.AtualizarDadosPessoais(
+                    nomeSocial: null,
+                    sexo: "Masculino",
+                    telefone: "11977773333",
                     fotoUrl: null
                 );
 
-                await _context.Pessoas.AddAsync(pessoaAdmin);
+                // Criar usuário para o cliente 3
+                var usuarioCliente3 = await CriarUsuarioClienteAsync(
+                    "pedro.lima@email.com",
+                    "Cliente123!"
+                );
+
+                if (usuarioCliente3 != null)
+                {
+                    cliente3.VincularUsuario(usuarioCliente3.Id);
+                }
+
+                await _context.Clientes.AddRangeAsync(cliente1, cliente2, cliente3);
             }
+        }
+
+        private async Task<Usuario?> CriarUsuarioClienteAsync(string email, string senha)
+        {
+            // Verificar se email já existe
+            if (await _context.Usuarios.AnyAsync(u => u.Email == email))
+                return null;
+
+            var senhaHash = _senhaHasher.HashSenha(senha);
+            var usuario = new Usuario(email, senhaHash, UsuarioTipo.Cliente, true);
+
+            _context.Usuarios.Add(usuario);
+            await _context.SaveChangesAsync(); // Salvar para obter o ID
+
+            return usuario;
         }
     }
 }
