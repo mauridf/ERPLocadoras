@@ -24,7 +24,205 @@ namespace ERPLocadoras.Infra.Data.Seed
             await SeedLocadorasExemplo();
             await SeedUsuariosLocadoras();
             await SeedClientesExemplo();
+            await SeedVeiculosExemplo();
             await _context.SaveChangesAsync();
+        }
+
+        private async Task SeedVeiculosExemplo()
+        {
+            if (!_context.Veiculos.Any())
+            {
+                var locadoras = await _context.Locadoras.ToListAsync();
+
+                foreach (var locadora in locadoras)
+                {
+                    if (locadora.NomeFantasia.Contains("Speed"))
+                    {
+                        // Veículos para locadora Speed (carros)
+                        await SeedVeiculosSpeed(locadora.Id);
+                    }
+                    else if (locadora.NomeFantasia.Contains("Moto Express"))
+                    {
+                        // Veículos para locadora Moto Express (motos)
+                        await SeedVeiculosMotoExpress(locadora.Id);
+                    }
+                }
+            }
+        }
+
+        private async Task SeedVeiculosMotoExpress(Guid locadoraId)
+        {
+            // Moto 1 - Honda CG 160
+            var cg160 = new Veiculo(
+                TipoVeiculo.Moto,
+                "Honda",
+                "CG 160",
+                2023,
+                2024,
+                "MNO5P67",
+                "45678901234",
+                "ML3PC26X6LJ123456",
+                "Vermelha",
+                CategoriaVeiculo.Utilitario,
+                Combustivel.Gasolina,
+                5000,
+                new DateTime(2023, 4, 5),
+                15000,
+                locadoraId
+            );
+
+            cg160.AtualizarDadosBasicos(
+                "160cc",
+                "2 passageiros",
+                "Moto econômica e confiável"
+            );
+
+            cg160.AtualizarValorMercado(14000);
+            cg160.AtualizarDadosSeguro(
+                "5678901234",
+                "Allianz",
+                new DateTime(2024, 12, 31)
+            );
+
+            // Moto 2 - Yamaha Factor 150
+            var factor150 = new Veiculo(
+                TipoVeiculo.Moto,
+                "Yamaha",
+                "Factor 150",
+                2023,
+                2024,
+                "PQR6S78",
+                "56789012345",
+                "ML3PC26X6LJ123457",
+                "Azul",
+                CategoriaVeiculo.Utilitario,
+                Combustivel.Gasolina,
+                3000,
+                new DateTime(2023, 5, 15),
+                14000,
+                locadoraId
+            );
+
+            factor150.AtualizarDadosBasicos(
+                "150cc",
+                "2 passageiros",
+                "Nova, com garantia"
+            );
+
+            factor150.AtualizarValorMercado(13500);
+            factor150.AtualizarDadosSeguro(
+                "6789012345",
+                "Allianz",
+                new DateTime(2024, 12, 31)
+            );
+
+            await _context.Veiculos.AddRangeAsync(cg160, factor150);
+        }
+
+        private async Task SeedVeiculosSpeed(Guid locadoraId)
+        {
+            // Carro 1 - Honda Civic
+            var civic = new Veiculo(
+                TipoVeiculo.Carro,
+                "Honda",
+                "Civic",
+                2023,
+                2024,
+                "ABC1D23",
+                "12345678901",
+                "9BWZZZ377VT004251",
+                "Prata",
+                CategoriaVeiculo.Sedan,
+                Combustivel.Flex,
+                15000,
+                new DateTime(2023, 1, 15),
+                120000,
+                locadoraId
+            );
+
+            civic.AtualizarDadosBasicos(
+                "2.0 Flexone",
+                "5 passageiros",
+                "Veículo em excelente estado, único dono"
+            );
+
+            civic.AtualizarValorMercado(115000);
+            civic.AtualizarDadosSeguro(
+                "2345678901",
+                "Porto Seguro",
+                new DateTime(2024, 12, 31)
+            );
+            civic.AtualizarManutencao(
+                new DateTime(2023, 12, 1),
+                new DateTime(2024, 6, 1)
+            );
+
+            // Carro 2 - Toyota Corolla
+            var corolla = new Veiculo(
+                TipoVeiculo.Carro,
+                "Toyota",
+                "Corolla",
+                2023,
+                2024,
+                "DEF2G34",
+                "23456789012",
+                "9BWZZZ377VT004252",
+                "Preto",
+                CategoriaVeiculo.Sedan,
+                Combustivel.Flex,
+                8000,
+                new DateTime(2023, 3, 20),
+                130000,
+                locadoraId
+            );
+
+            corolla.AtualizarDadosBasicos(
+                "2.0 Flex",
+                "5 passageiros",
+                "Veículo com pouquíssimo uso"
+            );
+
+            corolla.AtualizarValorMercado(125000);
+            corolla.AtualizarDadosSeguro(
+                "3456789012",
+                "Porto Seguro",
+                new DateTime(2024, 12, 31)
+            );
+
+            // Carro 3 - Fiat Strada
+            var strada = new Veiculo(
+                TipoVeiculo.Carro,
+                "Fiat",
+                "Strada",
+                2023,
+                2024,
+                "GHI3J45",
+                "34567890123",
+                "9BWZZZ377VT004253",
+                "Branco",
+                CategoriaVeiculo.Pickup,
+                Combustivel.Flex,
+                25000,
+                new DateTime(2023, 2, 10),
+                80000,
+                locadoraId
+            );
+
+            strada.AtualizarDadosBasicos(
+                "1.4 Firefly",
+                "2 passageiros + caçamba",
+                "Ideal para trabalho"
+            );
+
+            strada.AtualizarValorMercado(75000);
+            strada.AtualizarDadosSeguro(
+                "4567890123",
+                "Porto Seguro",
+                new DateTime(2024, 12, 31)
+            );
+            strada.AlterarStatus(StatusVeiculo.Manutencao); // Em manutenção
+
+            await _context.Veiculos.AddRangeAsync(civic, corolla, strada);
         }
 
         private async Task SeedUsuariosGlobais()
